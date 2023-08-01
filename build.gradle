@@ -1,0 +1,101 @@
+buildscript {
+    ext {
+        springVersion = '2.4.5'
+        opeapiVersion = '1.5.12'
+        lombokVersion = '1.18.12'
+        mockitoVersion = '3.7.7'
+        h2Version = '2.1.212'
+        dockerVersion = '0.22.2'
+        protobufVersion = '0.8.14'
+        grpcProtocVersion = '3.12.0'
+        grpcProtocJavaVersion = '1.35.0'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'jacoco'
+    id 'org.springframework.boot' version "${springVersion}"
+    id 'com.palantir.docker' version "${dockerVersion}"
+    id 'com.google.protobuf' version "${protobufVersion}"
+}
+
+group = 'retail-api'
+
+version = '1.0.0'
+
+bootJar {
+    archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}"
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web:${springVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springVersion}")
+    
+    implementation("org.springframework.boot:spring-boot-starter-actuator:${springVersion}")
+    implementation("io.micrometer:micrometer-registry-prometheus:latest.release")
+    
+    implementation("org.springdoc:springdoc-openapi-ui:${opeapiVersion}")
+    
+    implementation("com.h2database:h2:${h2Version}")
+    
+    implementation("net.devh:grpc-spring-boot-starter:2.12.0.RELEASE")
+    
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springVersion}")
+    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
+    testImplementation("org.mockito:mockito-inline:${mockitoVersion}")
+    testImplementation("io.grpc:grpc-testing:${grpcProtocJavaVersion}")
+    
+    compileOnly("org.projectlombok:lombok:${lombokVersion}")
+    annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        // for Apple M1, add protoc_platform=osx-x86_64 in $HOME/.gradle/gradle.properties
+        artifact = "com.google.protobuf:protoc:${grpcProtocVersion}"
+        if (project.hasProperty('protoc_platform')) {
+            artifact += ":${protoc_platform}"
+        }
+    }
+    plugins {
+        grpc {
+            // for Apple M1, add protoc_platform=osx-x86_64 in $HOME/.gradle/gradle.properties
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcProtocJavaVersion}"
+            if (project.hasProperty('protoc_platform')) {
+                artifact += ":${protoc_platform}"
+            }
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = false
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
