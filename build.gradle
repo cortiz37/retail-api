@@ -2,7 +2,7 @@ buildscript {
     ext {
         springVersion = '2.4.5'
         opeapiVersion = '1.5.12'
-        lombokVersion = '1.18.12'
+        lombokVersion = '1.18.22'
         mockitoVersion = '3.7.7'
         h2Version = '2.1.212'
         dockerVersion = '0.22.2'
